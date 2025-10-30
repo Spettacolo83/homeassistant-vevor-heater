@@ -1,0 +1,228 @@
+# Vevor Diesel Heater - Home Assistant Integration
+
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
+[![GitHub release](https://img.shields.io/github/release/MSDATDE/homeassistant-vevor-heater.svg)](https://github.com/MSDATDE/homeassistant-vevor-heater/releases)
+[![License](https://img.shields.io/github/license/MSDATDE/homeassistant-vevor-heater.svg)](LICENSE)
+
+Control your Vevor/BYD Diesel Heater from Home Assistant via Bluetooth.
+
+## Features
+
+- 🌡️ **Climate Entity** - Full thermostat control with target temperature
+- 🔥 **Heater Level Control** - Adjust heating power (1-10) via fan entity
+- ⚙️ **Running Mode Selection** - Switch between Manual, Level, and Temperature modes
+- 📊 **Sensors** - Monitor temperature, voltage, altitude, and heater status
+- 🔌 **Bluetooth LE** - Direct local connection, no cloud required
+- ⚡ **Real-time Updates** - 30-second polling interval
+
+## Supported Devices
+
+This integration has been tested with:
+- Vevor Diesel Heater (BYD variant)
+- Protocol: AA66 (20-byte unencrypted)
+- Bluetooth Service UUID: `0000ffe0-0000-1000-8000-00805f9b34fb`
+
+Other Vevor diesel heaters using similar protocols (AA55 encrypted/unencrypted) may also work.
+
+## Installation
+
+### HACS (Recommended)
+
+1. Open HACS in Home Assistant
+2. Go to "Integrations"
+3. Click the three dots menu → "Custom repositories"
+4. Add this repository: `https://github.com/MSDATDE/homeassistant-vevor-heater`
+5. Category: "Integration"
+6. Click "Add"
+7. Search for "Vevor Diesel Heater" and install
+8. Restart Home Assistant
+
+### Manual Installation
+
+1. Download the latest release from [GitHub](https://github.com/MSDATDE/homeassistant-vevor-heater/releases)
+2. Copy the `custom_components/vevor_heater` folder to your Home Assistant's `custom_components` directory
+3. Restart Home Assistant
+
+## Finding Your Heater's MAC Address
+
+Before adding the integration, you need to find your heater's Bluetooth MAC address:
+
+1. Install Python dependencies:
+   ```bash
+   pip install bleak
+   ```
+
+2. Run the finder script (included in this repo):
+   ```bash
+   python3 find_heater.py before
+   ```
+
+3. **Close the Vevor app** if it's running
+
+4. Open the Vevor app and **connect** to your heater
+
+5. Run the finder script again:
+   ```bash
+   python3 find_heater.py after
+   ```
+
+6. The device that **disappeared** is your heater! Note its MAC address (e.g., `69:96:19:04:59:9B`)
+
+## Configuration
+
+### Add Integration
+
+1. Go to **Settings** → **Devices & Services**
+2. Click **"+ Add Integration"**
+3. Search for **"Vevor Diesel Heater"**
+4. Enter your heater's MAC address (found using the script above)
+5. Click **"Submit"**
+
+### Entities Created
+
+After setup, you'll have these entities:
+
+#### Climate
+- `climate.vevor_heater` - Main thermostat control
+  - Set target temperature (8-36°C)
+  - Turn heater ON/OFF
+  - Works in Temperature Mode
+
+#### Fan
+- `fan.vevor_heater_heater_level` - Heater power level (1-10)
+  - Only available in Manual or Level mode
+  - Percentage control (10%-100%)
+
+#### Select
+- `select.vevor_heater_running_mode` - Mode selector
+  - Manual - Full manual control
+  - Level Mode - Set heating level (1-10)
+  - Temperature Mode - Automatic temperature control
+
+#### Sensors
+- `sensor.vevor_heater_case_temperature` - Heater case temperature (°C)
+- `sensor.vevor_heater_interior_temperature` - Room/cabin temperature (°C)
+- `sensor.vevor_heater_supply_voltage` - Power supply voltage (V)
+- `sensor.vevor_heater_altitude` - Altitude compensation setting (m)
+- `sensor.vevor_heater_running_step` - Current operation step
+- `sensor.vevor_heater_error` - Error status
+- `sensor.vevor_heater_running_mode` - Current running mode
+- `sensor.vevor_heater_set_level` - Current set level
+
+#### Binary Sensors
+- `binary_sensor.vevor_heater_active` - Heater active status
+
+#### Switches
+- `switch.vevor_heater_power` - Simple ON/OFF control
+
+#### Number
+- `number.vevor_heater_target_temperature` - Set target temperature
+
+## Dashboard Cards
+
+### Recommended Setup
+
+Create a nice dashboard with these cards:
+
+1. **Climate Card** - For temperature control
+   ```yaml
+   type: thermostat
+   entity: climate.vevor_heater
+   ```
+
+2. **Mode Selector** - To switch modes
+   ```yaml
+   type: entities
+   entities:
+     - entity: select.vevor_heater_running_mode
+   ```
+
+3. **Heater Level Control** - For manual power control
+   ```yaml
+   type: entities
+   entities:
+     - entity: fan.vevor_heater_heater_level
+   ```
+
+4. **Sensor Overview**
+   ```yaml
+   type: entities
+   title: Heater Status
+   entities:
+     - entity: sensor.vevor_heater_interior_temperature
+     - entity: sensor.vevor_heater_case_temperature
+     - entity: sensor.vevor_heater_supply_voltage
+     - entity: binary_sensor.vevor_heater_active
+   ```
+
+## Troubleshooting
+
+### Heater Not Found
+
+- Make sure Bluetooth is enabled on your Home Assistant host
+- Ensure the heater is powered on
+- Vevor app must be **disconnected** (only one BLE connection allowed)
+- Try running `find_heater.py` again to verify MAC address
+
+### No Data / Connection Issues
+
+- Check Home Assistant logs: **Settings** → **System** → **Logs**
+- Look for entries with `vevor_heater`
+- The integration uses exponential backoff (5s, 10s, 20s, 40s) for reconnection
+
+### Commands Not Working
+
+- Verify you're using the correct passkey (default: `1234`)
+- Some commands only work in specific modes:
+  - Temperature setting: Temperature Mode
+  - Level setting: Manual or Level Mode
+
+### Debug Logging
+
+Enable debug logging in `configuration.yaml`:
+
+```yaml
+logger:
+  default: info
+  logs:
+    custom_components.vevor_heater: debug
+```
+
+## Protocol Details
+
+This integration communicates via Bluetooth LE using the Vevor/BYD diesel heater protocol:
+
+- **Service UUID**: `0000ffe0-0000-1000-8000-00805f9b34fb`
+- **Characteristic UUID**: `0000ffe1-0000-1000-8000-00805f9b34fb` (read/write/notify)
+- **Protocol**: AA66 (20-byte unencrypted) or AA55 (encrypted variants)
+- **Default Passkey**: `1234`
+
+### Commands
+- Command 1: Status query
+- Command 2: Set running mode
+- Command 3: Turn ON (arg=1) / OFF (arg=0)
+- Command 4: Set level or temperature
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- Based on the [vevor-ble-bridge](https://github.com/andyrak/vevor-ble-bridge) protocol documentation
+- Thanks to the Home Assistant community for support
+
+## Support
+
+If you encounter issues, please:
+1. Check the [Issues](https://github.com/MSDATDE/homeassistant-vevor-heater/issues) page
+2. Enable debug logging and include logs in your report
+3. Provide your heater model and protocol type (AA55/AA66)
+
+---
+
+**Disclaimer**: This is an unofficial integration and is not affiliated with Vevor or BYD.

@@ -1,0 +1,79 @@
+{
+  "config": {
+    "step": {
+      "confirm": {
+        "description": "Do you want to set up {name}?"
+      },
+      "user": {
+        "data": {
+          "address": "Device"
+        },
+        "description": "Select your Vevor Diesel Heater from the list."
+      },
+      "manual": {
+        "data": {
+          "address": "Bluetooth MAC Address"
+        },
+        "description": "Enter the Bluetooth MAC address of your Vevor heater (e.g., A4:C1:37:24:B8:64). You can find this in the Bluetooth logs or using a BLE scanner app."
+      }
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
+    },
+    "error": {
+      "invalid_mac": "Invalid MAC address format. Please use format AA:BB:CC:DD:EE:FF"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "case_temp": {
+        "name": "Case Temperature"
+      },
+      "cab_temp": {
+        "name": "Interior Temperature"
+      },
+      "supply_voltage": {
+        "name": "Supply Voltage"
+      },
+      "running_step": {
+        "name": "Running Step"
+      },
+      "running_mode": {
+        "name": "Running Mode"
+      },
+      "set_level": {
+        "name": "Set Level"
+      },
+      "altitude": {
+        "name": "Altitude"
+      },
+      "error_code": {
+        "name": "Error"
+      }
+    },
+    "binary_sensor": {
+      "active": {
+        "name": "Active"
+      },
+      "problem": {
+        "name": "Problem"
+      },
+      "connected": {
+        "name": "Connected"
+      }
+    },
+    "switch": {
+      "power": {
+        "name": "Power"
+      }
+    },
+    "number": {
+      "level": {
+        "name": "Level"
+      },
+      "target_temp": {
+        "name": "Target Temperature"
+      }
+    }
+  }
+}
